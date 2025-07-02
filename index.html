@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Timer</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #181a20;
+            overflow: hidden;
+        }
+        .background {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 0;
+            background: transparent;
+            filter: none;
+        }
+        .background-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 1;
+        }
+        .container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100vw;
+        }
+        .timer-display {
+            font-size: 5rem;
+            color: #fff;
+            text-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.1);
+            margin: 40px 0 20px 0;
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+        .settings-icon {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            font-size: 2rem;
+            color: #fff;
+            cursor: pointer;
+            z-index: 3;
+            transition: transform 0.3s ease;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .settings-icon:hover {
+            transform: rotate(20deg) scale(1.1);
+        }
+        .email-signup {
+            margin-top: 30px;
+            background: rgba(35, 36, 58, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 8px 18px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .email-signup input[type="email"] {
+            padding: 7px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-right: 6px;
+            font-size: 0.95rem;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            width: 220px;
+            backdrop-filter: blur(5px);
+        }
+        .email-signup input[type="email"]::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        .email-signup button {
+            padding: 7px 16px;
+            border-radius: 6px;
+            border: none;
+            background: linear-gradient(45deg, #ff6bcb, #ff3b8a);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,107,203,0.3);
+        }
+        .email-signup button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,107,203,0.4);
+        }
+        #emailMsg {
+            margin-top: 8px;
+            color: #aaffaa;
+            font-size: 0.95rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0; top: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: rgba(35, 36, 58, 0.95);
+            backdrop-filter: blur(15px);
+            padding: 32px 40px;
+            border-radius: 18px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            color: #fff;
+            min-width: 320px;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .modal-content input {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 5px;
+        }
+        .modal-content button {
+            background: linear-gradient(45deg, #6bffcb, #3bff8a);
+            color: #23243a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .close {
+            position: absolute;
+            top: 12px;
+            right: 18px;
+            font-size: 1.7rem;
+            color: #fff;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close:hover {
+            color: #ff6bcb;
+        }
+        .email-signup.top-right {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            z-index: 4;
+            margin-top: 0;
+        }
+        .start-btn {
+            margin-top: 18px;
+            padding: 16px 48px;
+            font-size: 1.3rem;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(45deg, #6bffcb, #3bff8a);
+            color: #23243a;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(107,255,203,0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(107,255,203,0.4);
+        }
+        .start-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .custom-audio-bar {
+            position: fixed;
+            left: 30px;
+            bottom: 30px;
+            z-index: 3;
+            background: rgba(35, 36, 58, 0.9);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            min-width: 350px;
+            max-width: 450px;
+            width: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .audio-cover {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-right: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .audio-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .audio-title {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .audio-artist {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+        .audio-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 4px;
+            border-radius: 50%;
+        }
+        .audio-btn:hover {
+            color: #6bffcb;
+            transform: scale(1.1);
+        }
+        .time-display {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85rem;
+            min-width: 80px;
+        }
+        #audioProgress {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        #audioProgress::-webkit-slider-thumb {
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6bffcb;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .playlist-controls {
+            display: flex;
+            gap: 8px;
+            margin-left: 12px;
+        }
+        .spotify-embed {
+            display: none;
+        }
+        .spotify-toggle {
+            display: none;
+        }
+        .mini-btn {
+            background: #23243aee;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 6px 16px;
+            margin: 0;
+            box-shadow: 0 2px 8px #0002;
+            transition: background 0.2s, color 0.2s, transform 0.2s;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            min-width: 64px;
+        }
+        .mini-btn:hover {
+            background: #35365a;
+            color: #ff6bcb;
+            transform: translateY(-2px) scale(1.04);
+        }
+        @media (max-width: 600px) {
+            .timer-display { font-size: 2.5rem; }
+            .modal-content { min-width: 90vw; padding: 18px 8vw; }
+            .email-signup.top-right {
+                top: 10px;
+                right: 10px;
+                padding: 10px 12px;
+            }
+            .start-btn {
+                font-size: 1rem;
+                padding: 12px 24px;
+            }
+            .custom-audio-bar {
+                left: 10px;
+                bottom: 10px;
+                padding: 8px 12px;
+                min-width: 0;
+                max-width: calc(100vw - 20px);
+            }
+            .audio-cover {
+                width: 40px;
+                height: 40px;
+                margin-right: 10px;
+            }
+            .audio-title { font-size: 1rem; }
+            .audio-artist { font-size: 0.8rem; }
+            .spotify-toggle {
+                display: none;
+            }
+            .spotify-embed {
+                display: none;
+            }
+            .mini-btn {
+                font-size: 0.8rem;
+                padding: 4px 10px;
+                min-width: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <video class="background-video" autoplay loop muted playsinline>
+        <source src="video.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <div class="background"></div>
+    <div class="email-signup top-right">
+        <form id="emailForm">
+            <input type="email" id="emailInput" placeholder="Enter your email for newsletter" required style="padding: 7px 10px; border-radius: 6px; font-size: 0.95rem; width: 220px;">
+            <button type="submit" style="padding: 7px 16px; border-radius: 6px; font-size: 0.95rem;">Sign Up</button>
+        </form>
+        <div id="emailMsg"></div>
+    </div>
+    <div class="container">
+        <div class="timer-display" id="timerDisplay">00:00:00</div>
+        <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+            <button id="startBtn" class="mini-btn">Start</button>
+            <button id="stopBtn" class="mini-btn">Stop</button>
+            <button id="restartBtn" class="mini-btn">Restart</button>
+            <button id="settingsBtn" class="mini-btn" style="margin-left: 8px;">Settings</button>
+        </div>
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <span class="close" id="closeModal">&times;</span>
+            <h2>Timer Settings</h2>
+            <form id="settingsForm">
+                <label>Study Time:</label>
+                <input type="number" id="studyHours" min="0" max="12" value="0"> hours
+                <input type="number" id="studyMinutes" min="1" max="59" value="25"> minutes
+                <br><br>
+                <label>Break Time:</label>
+                <input type="number" id="breakHours" min="0" max="12" value="0"> hours
+                <input type="number" id="breakMinutes" min="1" max="59" value="5"> minutes
+                <br><br>
+                <label>Spotify Playlist URL (optional):</label>
+                <input type="text" id="spotifyUrl" placeholder="https://open.spotify.com/playlist/..." style="width: 100%; margin-top: 5px;">
+                <br><br>
+                <button type="submit">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Timer logic
+        let studyTime = { hours: 0, minutes: 25 };
+        let breakTime = { hours: 0, minutes: 5 };
+        let isStudy = true;
+        let timer = null;
+        let running = false;
+        let remainingSeconds = (studyTime.hours * 60 + studyTime.minutes) * 60;
+
+        const timerDisplay = document.getElementById('timerDisplay');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeModal = document.getElementById('closeModal');
+        const settingsForm = document.getElementById('settingsForm');
+        const emailForm = document.getElementById('emailForm');
+        const emailInput = document.getElementById('emailInput');
+        const emailMsg = document.getElementById('emailMsg');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const restartBtn = document.getElementById('restartBtn');
+
+        function formatTime(sec) {
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function formatAudioTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            timerDisplay.textContent = formatTime(remainingSeconds);
+        }
+
+        function startTimer() {
+            if (timer) clearInterval(timer);
+            running = true;
+            startBtn.disabled = true;
+            startBtn.textContent = 'Running...';
+            timer = setInterval(() => {
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    updateDisplay();
+                } else {
+                    clearInterval(timer);
+                    running = false;
+                    startBtn.disabled = false;
+                    startBtn.textContent = 'Start';
+                    isStudy = !isStudy;
+                    if (isStudy) {
+                        remainingSeconds = (studyTime.hours * 60 + studyTime.minutes) * 60;
+                        alert('Break is over! Time to study! 📚');
+                    } else {
+                        remainingSeconds = (breakTime.hours * 60 + breakTime.minutes) * 60;
+                        alert('Study session over! Time for a break! ☕');
+                    }
+                    updateDisplay();
+                }
+            }, 1000);
+        }
+
+        function setupSpotifyEmbed(url) {
+            if (!url) return;
+            
+            // Spotify URL'yi embed formatına çevir
+            let embedUrl = url;
+            if (url.includes('open.spotify.com')) {
+                embedUrl = url.replace('open.spotify.com', 'open.spotify.com/embed');
+                if (!embedUrl.includes('/embed/')) {
+                    embedUrl = embedUrl.replace('/playlist/', '/embed/playlist/');
+                    embedUrl = embedUrl.replace('/album/', '/embed/album/');
+                    embedUrl = embedUrl.replace('/track/', '/embed/track/');
+                }
+            }
+            
+            spotifyEmbed.innerHTML = `
+                <iframe src="${embedUrl}?utm_source=generator&theme=0" 
+                        width="100%" 
+                        height="352" 
+                        frameborder="0" 
+                        allowfullscreen="" 
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                        loading="lazy">
+                </iframe>
+            `;
+        }
+
+        // Event Listeners
+        startBtn.onclick = () => {
+            if (!running) {
+                startTimer();
+            }
+        };
+
+        stopBtn.onclick = () => {
+            if (timer) clearInterval(timer);
+            running = false;
+            startBtn.disabled = false;
+            startBtn.textContent = 'Start';
+            if (isStudy) {
+                remainingSeconds = (studyTime.hours * 60 + studyTime.minutes) * 60;
+            } else {
+                remainingSeconds = (breakTime.hours * 60 + breakTime.minutes) * 60;
+            }
+            updateDisplay();
+        };
+
+        restartBtn.onclick = () => {
+            if (timer) clearInterval(timer);
+            running = false;
+            startBtn.disabled = false;
+            startBtn.textContent = 'Start';
+            if (isStudy) {
+                remainingSeconds = (studyTime.hours * 60 + studyTime.minutes) * 60;
+            } else {
+                remainingSeconds = (breakTime.hours * 60 + breakTime.minutes) * 60;
+            }
+            updateDisplay();
+            startTimer();
+        };
+
+        settingsBtn.onclick = () => {
+            settingsModal.style.display = 'flex';
+            document.getElementById('studyHours').value = studyTime.hours;
+            document.getElementById('studyMinutes').value = studyTime.minutes;
+            document.getElementById('breakHours').value = breakTime.hours;
+            document.getElementById('breakMinutes').value = breakTime.minutes;
+            document.getElementById('spotifyUrl').value = spotifyPlaylistUrl;
+        };
+
+        closeModal.onclick = () => {
+            settingsModal.style.display = 'none';
+        };
+
+        window.onclick = (e) => {
+            if (e.target === settingsModal) settingsModal.style.display = 'none';
+        };
+
+        settingsForm.onsubmit = (e) => {
+            e.preventDefault();
+            studyTime.hours = parseInt(document.getElementById('studyHours').value) || 0;
+            studyTime.minutes = parseInt(document.getElementById('studyMinutes').value) || 1;
+            breakTime.hours = parseInt(document.getElementById('breakHours').value) || 0;
+            breakTime.minutes = parseInt(document.getElementById('breakMinutes').value) || 1;
+            
+            const newSpotifyUrl = document.getElementById('spotifyUrl').value.trim();
+            if (newSpotifyUrl !== spotifyPlaylistUrl) {
+                spotifyPlaylistUrl = newSpotifyUrl;
+                setupSpotifyEmbed(spotifyPlaylistUrl);
+            }
+            
+            isStudy = true;
+            if (timer) clearInterval(timer);
+            running = false;
+            startBtn.disabled = false;
+            startBtn.textContent = 'Start';
+            remainingSeconds = (studyTime.hours * 60 + studyTime.minutes) * 60;
+            updateDisplay();
+            settingsModal.style.display = 'none';
+        };
+
+        // Email logic
+        const emails = [];
+        emailForm.onsubmit = (e) => {
+            e.preventDefault();
+            const email = emailInput.value.trim();
+            if (!email) return;
+            
+            if (emails.includes(email)) {
+                emailMsg.textContent = 'You are already signed up!';
+                emailMsg.style.color = '#ffb3b3';
+            } else {
+                emails.push(email);
+                emailMsg.textContent = 'Thank you for signing up!';
+                emailMsg.style.color = '#aaffaa';
+                emailInput.value = '';
+            }
+            setTimeout(() => { emailMsg.textContent = ''; }, 3000);
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDisplay();
+            startBtn.disabled = false;
+        });
+    </script>
+
+    <div style="position: fixed; left: 30px; bottom: 0px; z-index: 3; width: 340px; height: 180px;">
+        <iframe style="border-radius:12px; width:100%; height:100%;" src="https://open.spotify.com/embed/playlist/37i9dQZF1DX8Uebhn9wzrS?utm_source=generator" width="100%" height="100%" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    </div>
+</body>
+</html>
